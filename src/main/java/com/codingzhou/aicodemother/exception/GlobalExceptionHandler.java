@@ -5,7 +5,7 @@ import com.codingzhou.aicodemother.common.BaseResponse;
 import com.codingzhou.aicodemother.common.ResultUtils;
 import com.codingzhou.aicodemother.exception.BusinessException;
 import com.codingzhou.aicodemother.exception.ErrorCode;
-//import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +19,7 @@ import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
+@Hidden
 public class GlobalExceptionHandler {
 
 
