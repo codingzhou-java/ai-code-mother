@@ -9,12 +9,32 @@ spring:
   profiles:
     active: local
 
+  # redis
+  data:
+    redis:
+      host: ${spring.data.redis.host}
+      port: 6379
+      user: ${spring.data.redis.user:default}
+      password: ${spring.data.redis.password:12345678}
+      ttl: 3600 #过期时间，单位s
+
+  # session 配置
+  session:
+    store-type: redis
+    # session 30 天过期
+    timeout: 2592000
+
+
+
 
 server:
   port: 8123
   servlet:
     context-path: /api
-
+    # cookie 30 天过期
+    session:
+      cookie:
+        max-age: 2592000
 # springdoc-openapi
 springdoc:
   group-configs:
@@ -46,3 +66,10 @@ langchain4j:
       max-tokens: 8192
       log-requests: true
       log-responses: true
+      strict-json-schema: true
+
+    reasoning-chat-model:
+      base-url: ${langchain4j.open-ai.reasoning-chat-model.base-url:https://api.deepseek.com}
+      api-key: ${langchain4j.open-ai.reasoning-chat-model.api-key}
+      model-name: ${langchain4j.open-ai.reasoning-chat-model.model-name:deepseek-chat}
+      max-tokens: ${langchain4j.open-ai.reasoning-chat-model.max-tokens:8192}
