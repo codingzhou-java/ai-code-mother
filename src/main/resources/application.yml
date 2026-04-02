@@ -55,8 +55,8 @@ langchain4j:
       model-name: deepseek-chat
       log-requests: true
       log-responses: true
-      strict-json-schema: true
-      response-format: json_object
+#     strict-json-schema: true
+#     response-format: json_object
       max-token: 8192
 
     streaming-chat-model:

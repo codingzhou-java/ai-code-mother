@@ -15,12 +15,15 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.time.Duration;
 import java.util.UUID;
 
+
 @Slf4j
+@Component
 public class WebScreenshotUtils {
 
     private static final ThreadLocal<WebDriver> driverThreadLocal = new ThreadLocal<>();
@@ -212,4 +215,7 @@ public class WebScreenshotUtils {
         }
     }
 
+    //TODO
+    public static void cleanupTempFiles() {
+    }
 }
