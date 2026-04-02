@@ -7,7 +7,6 @@ import cn.hutool.core.util.StrUtil;
 import com.codingzhou.aicodemother.exception.BusinessException;
 import com.codingzhou.aicodemother.exception.ErrorCode;
 import io.github.bonigarcia.wdm.WebDriverManager;
-import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
@@ -24,14 +23,33 @@ import java.util.UUID;
 @Slf4j
 public class WebScreenshotUtils {
 
-    private static final WebDriver webDriver;
+    private static final ThreadLocal<WebDriver> driverThreadLocal = new ThreadLocal<>();
 
-    static {
-        final int DEFAULT_WIDTH = 1600;
-        final int DEFAULT_HEIGHT = 900;
-        webDriver = initChromeDriver(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    /**
+     * 获取当前线程的WebDriver实例
+     * 如果不存在则创建一个新的
+     */
+    public static WebDriver getDriver() {
+        WebDriver driver = driverThreadLocal.get();
+        if (driver == null) {
+            driver = initChromeDriver();
+            driverThreadLocal.set(driver);
+        }
+        return driver;
     }
 
+    /**
+     * 默认浏览器窗口宽度
+     */
+    private static final int DEFAULT_WIDTH = 1600;
+
+    /**
+     * 默认浏览器窗口高度
+     */
+    private static final int DEFAULT_HEIGHT = 900;
+
+
+    
 
     /**
      * 生成网页截图
@@ -55,11 +73,12 @@ public class WebScreenshotUtils {
             // 原始截图文件路径
             String imageSavePath = rootPath + File.separator + RandomUtil.randomNumbers(5) + IMAGE_SUFFIX;
             // 访问网页
-            webDriver.get(webUrl);
+            WebDriver driver = getDriver();
+            driver.get(webUrl);
             // 等待页面加载完成
-            waitForPageLoad(webDriver);
+            waitForPageLoad(driver);
             // 截图
-            byte[] screenshotBytes = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
+            byte[] screenshotBytes = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
             // 保存原始图片
             saveImage(screenshotBytes, imageSavePath);
             log.info("原始截图保存成功: {}", imageSavePath);
@@ -79,19 +98,28 @@ public class WebScreenshotUtils {
 
 
     /**
- * PreDestroy注解标记的方法，在容器销毁Bean时调用
- * 用于执行资源清理工作
+ * 清理所有线程的WebDriver实例
+ * 在容器销毁时调用，释放所有WebDriver资源
  */
-    @PreDestroy
-    public void destroy() {
-    // 退出并关闭WebDriver实例，释放相关资源
-        webDriver.quit();
+    public static void cleanupAllDrivers() {
+        // 遍历所有线程的WebDriver实例并关闭
+        WebDriver driver = driverThreadLocal.get();
+        if (driver != null) {
+            try {
+                driver.quit();
+                log.info("WebDriver资源已释放");
+            } catch (Exception e) {
+                log.error("关闭WebDriver时发生异常", e);
+            } finally {
+                driverThreadLocal.remove();
+            }
+        }
     }
 
     /**
      * 初始化 Chrome 浏览器驱动
      */
-    private static WebDriver initChromeDriver(int width, int height) {
+    private static WebDriver initChromeDriver() {
         try {
             // 自动管理 ChromeDriver
             WebDriverManager.chromedriver().setup();
@@ -106,7 +134,7 @@ public class WebScreenshotUtils {
             // 禁用开发者shm使用
             options.addArguments("--disable-dev-shm-usage");
             // 设置窗口大小
-            options.addArguments(String.format("--window-size=%d,%d", width, height));
+            options.addArguments(String.format("--window-size=%d,%d", DEFAULT_WIDTH, DEFAULT_HEIGHT));
             // 禁用扩展
             options.addArguments("--disable-extensions");
             // 设置用户代理
@@ -143,7 +171,6 @@ public class WebScreenshotUtils {
     * @param compressedImagePath 压缩后图片的保存路径
      */
     private static void compressImage(String originalImagePath, String compressedImagePath) {
-        // 压缩图片质量（0.1 = 10% 质量）
     // 这里设置为0.3，表示压缩后的图片质量为原始质量的30%
         final float COMPRESSION_QUALITY = 0.3f;
         try {
@@ -184,7 +211,5 @@ public class WebScreenshotUtils {
             log.error("等待页面加载时出现异常，继续执行截图", e);
         }
     }
-
-
 
 }
